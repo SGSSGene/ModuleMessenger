@@ -1,5 +1,5 @@
 
-#include "messangerSystem/messangerSystem.h"
+#include "messengerSystem/messengerSystem.h"
 #include <iostream>
 
 class TestClass {
@@ -15,7 +15,7 @@ public:
 
 class Module {
 public:
-	messangerSystem::Registrator msreg;
+	messengerSystem::Registrator msreg;
 
 	Module() {
 		msreg.addListener(this, &Module::callbackString);
@@ -40,17 +40,17 @@ namespace {
 }
 
 int main() {
-	messangerSystem::changeThreadCount(1); // Work with 1 thread
+	messengerSystem::changeThreadCount(1); // Work with 1 thread
 
 	// Lock for ever
 	std::mutex mutex;
 	std::unique_lock<std::mutex> lock(mutex);
 	std::condition_variable blockForEver;
 
-	messangerSystem::postMessage(std::string("Hallo Welt!"));
-	messangerSystem::postMessage(10);
-	messangerSystem::postMessage(std::make_shared<TestClass>());
-	messangerSystem::postMessage(TestClass());
+	messengerSystem::postMessage(std::string("Hallo Welt!"));
+	messengerSystem::postMessage(10);
+	messengerSystem::postMessage(std::make_shared<TestClass>());
+	messengerSystem::postMessage(TestClass());
 
 	blockForEver.wait(lock);
 

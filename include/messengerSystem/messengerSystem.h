@@ -1,5 +1,5 @@
-#ifndef MESSANGERSYSTEM_MESSANGERSYSTEM_H
-#define MESSANGERSYSTEM_MESSANGERSYSTEM_H
+#ifndef MESSENGERSYSTEM_MESSENGERSYSTEM_H
+#define MESSENGERSYSTEM_MESSENGERSYSTEM_H
 
 
 #include <array>
@@ -12,7 +12,7 @@
 #include <threadPool/threadPool.h>
 
 
-namespace messangerSystem {
+namespace messengerSystem {
 
 
 template<typename P>
@@ -64,24 +64,24 @@ public:
 
 };
 
-class ModuleMessanger {
+class ModuleMessenger {
 private:
 	using ThreadPool = threadPool::ThreadPool<std::function<void()>>;
 	std::unique_ptr<ThreadPool> mThreadPool;
 	std::mutex mutex;
 
-	ModuleMessanger()
+	ModuleMessenger()
 		: mThreadPool(new ThreadPool())
 	{
 		mThreadPool->spawnThread([](std::function<void()> _f) {
 			_f();
 		}, 1);
 	}
-	ModuleMessanger(ModuleMessanger const&)            = delete;
-	ModuleMessanger& operator=(ModuleMessanger const&) = delete;
+	ModuleMessenger(ModuleMessenger const&)            = delete;
+	ModuleMessenger& operator=(ModuleMessenger const&) = delete;
 public:
-	static ModuleMessanger& getInstance() {
-		static ModuleMessanger m;
+	static ModuleMessenger& getInstance() {
+		static ModuleMessenger m;
 		return m;
 	}
 	template<typename P>
@@ -142,7 +142,7 @@ struct MessageSyncRegImpl<T, I, P, Args...> {
 		std::function<void(std::shared_ptr<P>&)> f = [t](std::shared_ptr<P>& _p) {
 			t->template callbackFunc<I>(_p);
 		};
-		ModuleMessanger::getInstance().registerCallbackSync(f);
+		ModuleMessenger::getInstance().registerCallbackSync(f);
 		MessageSyncRegImpl<T, I+1, Args...>::recReg(t);
 	}
 };
@@ -217,7 +217,7 @@ public:
 		std::function<void(P const&)> f = [t, _func](P const& _p) {
 			(t->*_func)(_p);
 		};
-		ModuleMessanger::getInstance().registerCallback(f);
+		ModuleMessenger::getInstance().registerCallback(f);
 	}
 
 	template<typename T, typename R, typename Arg1, typename Arg2, typename... Args>
@@ -229,16 +229,16 @@ public:
 
 template<typename T>
 void postMessage(T const& t) {
-	ModuleMessanger::getInstance().postMessage(t);
+	ModuleMessenger::getInstance().postMessage(t);
 }
 
 template<typename T>
 void postMessage(std::shared_ptr<T>& t) {
-	ModuleMessanger::getInstance().postMessage(t);
+	ModuleMessenger::getInstance().postMessage(t);
 }
 
 void changeThreadCount(int ct) {
-	ModuleMessanger::getInstance().changeThreadCt(ct);
+	ModuleMessenger::getInstance().changeThreadCt(ct);
 }
 
 
