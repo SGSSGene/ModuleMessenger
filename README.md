@@ -1,8 +1,8 @@
-# ModuleMessanger
+# ModuleMessenger
 
 This library makes it very simple sending messages between classes.
 Any datatype can be send. It will only be copied once.
-Message will be placed in a queue, and processed in the order the are inserted.
+Messege will be placed in a queue, and processed in the order the are inserted.
 Multiple threads will process the queue (default 1)
 
 ## Dependency
@@ -11,15 +11,15 @@ Multiple threads will process the queue (default 1)
 ## Example
 ### How to send messages:
 ```c
-	messangerSystem::postMessage(std::string("Hello World!"));
-	messangerSystem::postMessage(10);
+	messengerSystem::postMessage(std::string("Hello World!"));
+	messengerSystem::postMessage(10);
 ```
 
 ### How to register a for a message
 ```c
 class Module {
 private:
-	messangerSystem::Registrator msreg;
+	messengerSystem::Registrator msreg;
 public:
 	Module() {
 		msreg.addListener(this, &Module::callbackString);
@@ -41,6 +41,6 @@ public:
 
 ### How to change thread count
 ```c
-	messangerSystem::changeThreadCount(10);
+	messengerSystem::changeThreadCount(10);
 ```
 
