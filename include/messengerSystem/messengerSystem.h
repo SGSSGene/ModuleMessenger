@@ -15,6 +15,9 @@
 namespace messengerSystem {
 
 
+/**
+ * Holds all callbacks that listen to a certain DataType
+ */
 template<typename P>
 class Listener {
 private:
@@ -51,6 +54,15 @@ public:
 		return ctSync++;
 	}
 
+	void remove(int id) {
+		std::unique_lock<std::mutex> lock(mutex);
+		l.erase(l.find(id));
+	}
+	void removeSync(int id) {
+		std::unique_lock<std::mutex> lock(mutex);
+		lSync.erase(lSync.find(id));
+	}
+
 	void call(std::shared_ptr<P> p) {
 		std::unique_lock<std::mutex> lock(mutex);
 
@@ -64,6 +76,9 @@ public:
 
 };
 
+/** Main loop
+ * it registers generic Listener
+ */
 class ModuleMessenger {
 private:
 	using ThreadPool = threadPool::ThreadPool<std::function<void()>>;
@@ -85,12 +100,20 @@ public:
 		return m;
 	}
 	template<typename P>
-	void registerCallback(std::function<void(P const&)> _func) {
-		Listener<P>::getInstance().add(_func);
+	int registerCallback(std::function<void(P const&)> _func) {
+		return Listener<P>::getInstance().add(_func);
 	}
 	template<typename P>
-	void registerCallbackSync(std::function<void(std::shared_ptr<P>&)> _func) {
-		Listener<P>::getInstance().addSync(_func);
+	int registerCallbackSync(std::function<void(std::shared_ptr<P>&)> _func) {
+		return Listener<P>::getInstance().addSync(_func);
+	}
+	template<typename P>
+	void unregisterCallback(int id) {
+		Listener<P>::getInstance().remove(id);
+	}
+	template<typename P>
+	void unregisterCallbackSync(int id) {
+		Listener<P>::getInstance().removeSync(id);
 	}
 
 
@@ -115,9 +138,6 @@ public:
 		mThreadPool->queue(std::move(b));
 	}
 
-
-
-
 	void changeThreadCt(int ct) {
 		std::unique_ptr<ThreadPool> oldThreadPool(new ThreadPool);
 		{
@@ -138,18 +158,29 @@ struct MessageSyncRegImpl;
 
 template <typename T, int I, typename P, typename... Args>
 struct MessageSyncRegImpl<T, I, P, Args...> {
-	static void recReg(T* t) {
+	static std::vector<int> recReg(T* t) {
 		std::function<void(std::shared_ptr<P>&)> f = [t](std::shared_ptr<P>& _p) {
 			t->template callbackFunc<I>(_p);
 		};
-		ModuleMessenger::getInstance().registerCallbackSync(f);
-		MessageSyncRegImpl<T, I+1, Args...>::recReg(t);
+		auto id = ModuleMessenger::getInstance().registerCallbackSync(f);
+		auto idList = MessageSyncRegImpl<T, I+1, Args...>::recReg(t);
+		idList.push_back(id);
+		return idList;
 	}
+	static void unRecReg(std::vector<int> idList) {
+		ModuleMessenger::getInstance().unregisterCallbackSync<P>(idList.back());
+		idList.pop_back();
+		MessageSyncRegImpl<T, I+1, Args...>::unRecReg(idList);
+	}
+
 };
 template <typename T, int I>
 struct MessageSyncRegImpl<T, I> {
-	static void recReg(T* t) {}
+	static std::vector<int> recReg(T* t) { return {}; }
+	static void unRecReg(std::vector<int> idList) {}
 };
+
+
 
 template<int ...>
 struct seq { };
@@ -163,10 +194,20 @@ struct gens<0, S...> {
 };
 
 
+class MessageSyncBase {
+public:
+	virtual ~MessageSyncBase() {}
+};
+
+/** MessageSyncronizer
+ *
+ * callbacks can listen to several events and will be called if both events have occured
+ */
 template <typename T, typename... Args>
-class MessageSync {
+class MessageSync : public MessageSyncBase {
 private:
 	std::mutex mutex;
+	std::vector<int> idList;
 
 public:
 	MessageSync(T* t, void (T::*_func) (Args const&...)) {
@@ -177,7 +218,11 @@ public:
 			b = false;
 		}
 
-		MessageSyncRegImpl<MessageSync, 0, Args...>::recReg(this);
+		idList = MessageSyncRegImpl<MessageSync, 0, Args...>::recReg(this);
+	}
+	virtual ~MessageSync() override {
+		 MessageSyncRegImpl<MessageSync, 0, Args...>::unRecReg(idList);
+
 	}
 	template<int I, typename T2>
 	void callbackFunc(std::shared_ptr<T2>& _t) {
@@ -211,18 +256,32 @@ private:
 
 
 class Registrator {
+private:
+	std::vector<std::function<void()>> messageList;
+	std::vector<MessageSyncBase*>      messageSyncList;
 public:
+	~Registrator() {
+		for (auto const& m : messageList) {
+			m();
+		}
+		for (auto m : messageSyncList) {
+			delete m;
+		}
+	}
 	template<typename T, typename R, typename P>
 	void addListener(T* t, R (T::*_func)(P const&)) {
 		std::function<void(P const&)> f = [t, _func](P const& _p) {
 			(t->*_func)(_p);
 		};
-		ModuleMessenger::getInstance().registerCallback(f);
+		auto id = ModuleMessenger::getInstance().registerCallback(f);
+		messageList.push_back([id]() {
+			ModuleMessenger::getInstance().unregisterCallback<P>(id);
+		});
 	}
 
 	template<typename T, typename R, typename Arg1, typename Arg2, typename... Args>
 	void addListener(T* t, R (T::*_func)(Arg1 const&, Arg2 const&, Args const&...)) {
-		new MessageSync<T, Arg1, Arg2, Args...>(t, _func);
+		messageSyncList.push_back(new MessageSync<T, Arg1, Arg2, Args...>(t, _func));
 	}
 
 };
