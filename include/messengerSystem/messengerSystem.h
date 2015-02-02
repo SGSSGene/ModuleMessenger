@@ -296,7 +296,7 @@ void postMessage(std::shared_ptr<T>& t) {
 	ModuleMessenger::getInstance().postMessage(t);
 }
 
-void changeThreadCount(int ct) {
+inline void changeThreadCount(int ct) {
 	ModuleMessenger::getInstance().changeThreadCt(ct);
 }
 
