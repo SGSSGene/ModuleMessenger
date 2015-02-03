@@ -11,15 +11,15 @@ Multiple threads will process the queue (default 1)
 ## Example
 ### How to send messages:
 ```c
-	messengerSystem::postMessage(std::string("Hello World!"));
-	messengerSystem::postMessage(10);
+	moduleMessenger::postMessage(std::string("Hello World!"));
+	moduleMessenger::postMessage(10);
 ```
 
 ### How to register a for a message
 ```c
 class Module {
 private:
-	messengerSystem::Registrator msreg;
+	moduleMessenger::Registrator msreg;
 public:
 	Module() {
 		msreg.addListener(this, &Module::callbackString);
@@ -41,6 +41,6 @@ public:
 
 ### How to change thread count
 ```c
-	messengerSystem::changeThreadCount(10);
+	moduleMessenger::changeThreadCount(10);
 ```
 

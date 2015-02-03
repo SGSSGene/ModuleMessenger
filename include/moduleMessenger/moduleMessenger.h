@@ -1,5 +1,5 @@
-#ifndef MESSENGERSYSTEM_MESSENGERSYSTEM_H
-#define MESSENGERSYSTEM_MESSENGERSYSTEM_H
+#ifndef MODULEMESSENGER_MODULEMESSENGER_H
+#define MODULEMESSENGER_MODULEMESSENGER_H
 
 
 #include <array>
@@ -12,7 +12,7 @@
 #include <threadPool/threadPool.h>
 
 
-namespace messengerSystem {
+namespace moduleMessenger {
 
 
 /**
