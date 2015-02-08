@@ -14,12 +14,20 @@ public:
 
 class Module {
 public:
-	moduleMessenger::Registrator msreg;
+	moduleMessenger::Registrator               msreg;
+	moduleMessenger::TRegistrator<std::string> mstreg;
 
-	Module() {
+	Module()
+		: mstreg([](std::string const& s) {
+			std::cout<<"registered in c'tor"<<std::endl;
+		})
+	{
 		msreg.addListener(this, &Module::callbackString);
 		msreg.addListener(this, &Module::callbackInt);
 		msreg.addListener(this, &Module::callbackBoth);
+		msreg.addListener<std::string>([](std::string const& s) {
+			std::cout<<"lambda register"<<std::endl;
+		});
 
 	}
 	void callbackString(std::string const& s) {

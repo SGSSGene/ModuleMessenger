@@ -256,11 +256,11 @@ private:
 
 
 class Registrator {
-private:
+protected:
 	std::vector<std::function<void()>> messageList;
 	std::vector<MessageSyncBase*>      messageSyncList;
 public:
-	~Registrator() {
+	virtual ~Registrator() {
 		for (auto const& m : messageList) {
 			m();
 		}
@@ -279,12 +279,32 @@ public:
 		});
 	}
 
+	template<typename P>
+	void addListener(std::function<void(P const&)> _func) {
+		auto id = ModuleMessenger::getInstance().registerCallback(_func);
+		messageList.push_back([id]() {
+			ModuleMessenger::getInstance().unregisterCallback<P>(id);
+		});
+	}
+
 	template<typename T, typename R, typename Arg1, typename Arg2, typename... Args>
 	void addListener(T* t, R (T::*_func)(Arg1 const&, Arg2 const&, Args const&...)) {
 		messageSyncList.push_back(new MessageSync<T, Arg1, Arg2, Args...>(t, _func));
 	}
 
 };
+
+template<typename P>
+class TRegistrator : public Registrator {
+public:
+	TRegistrator(std::function<void(P const&)> _func) {
+		auto id = ModuleMessenger::getInstance().registerCallback(_func);
+		messageList.push_back([id]() {
+			ModuleMessenger::getInstance().unregisterCallback<P>(id);
+		});
+	}
+};
+
 
 template<typename T>
 void postMessage(T const& t) {
