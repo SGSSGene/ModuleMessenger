@@ -1,5 +1,6 @@
-#include "moduleMessenger/moduleMessenger.h"
 #include <iostream>
+
+#include "moduleMessenger/moduleMessenger.h"
 
 class TestClass {
 public:
@@ -9,6 +10,32 @@ public:
 	TestClass(TestClass const&) {
 		std::cout<<"Copy'Tor"<<std::endl;
 	}
+
+};
+
+class CountClass {
+public:
+	CountClass() {
+		std::cout << "CC: C'Tor" << std::endl;
+	}
+	CountClass(CountClass const&) {
+		std::cout << "CC: Copy-C'Tor" << std::endl;
+	}
+	CountClass(CountClass&&) {
+		std::cout << "CC: Move'Tor" << std::endl;
+	}
+	CountClass& operator=(CountClass const&) {
+		std::cout << "CC: assign" << std::endl;
+		return *this;
+	}
+	CountClass& operator=(CountClass&&) {
+		std::cout << "CC: move" << std::endl;
+		return *this;
+	}
+	~CountClass() {
+		std::cout << "CC: D'tor" << std::endl;
+	}
+
 
 };
 
@@ -58,6 +85,11 @@ int main() {
 	moduleMessenger::postMessage(10);
 	moduleMessenger::postMessage(std::make_shared<TestClass>());
 	moduleMessenger::postMessage(TestClass());
+
+	moduleMessenger::Registrator reg;
+	reg.addListener<CountClass>([](CountClass const&){});
+
+	moduleMessenger::postMessage(CountClass());
 
 	blockForEver.wait(lock);
 

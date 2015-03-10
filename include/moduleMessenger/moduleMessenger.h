@@ -1,7 +1,6 @@
 #ifndef MODULEMESSENGER_MODULEMESSENGER_H
 #define MODULEMESSENGER_MODULEMESSENGER_H
 
-
 #include <array>
 #include <functional>
 #include <memory>
@@ -121,6 +120,17 @@ public:
 	void postMessage(T const& t) {
 		std::unique_lock<std::mutex> lock(mutex);
 		std::shared_ptr<T> tPtr = std::make_shared<T>(t);
+
+		auto b = [tPtr](){
+			Listener<T>::getInstance().call(tPtr);
+		};
+		mThreadPool->queue(std::move(b));
+	}
+	template<typename T>
+	void postMessage(T&& t) {
+		std::unique_lock<std::mutex> lock(mutex);
+		std::shared_ptr<T> tPtr = std::make_shared<T>(std::move(t));
+
 
 		auto b = [tPtr](){
 			Listener<T>::getInstance().call(tPtr);
@@ -309,6 +319,11 @@ public:
 template<typename T>
 void postMessage(T const& t) {
 	ModuleMessenger::getInstance().postMessage(t);
+}
+
+template<typename T>
+void postMessage(T&& t) {
+	ModuleMessenger::getInstance().postMessage(std::move(t));
 }
 
 template<typename T>
