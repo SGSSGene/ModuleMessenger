@@ -21,7 +21,7 @@
          "legacy" : {
             "includes" : []
          },
-         "path" : "test",
+         "path" : "testModuleMessenger",
          "type" : "executable"
       }
    ]

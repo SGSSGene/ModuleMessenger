@@ -74,12 +74,12 @@ namespace {
 }
 
 int main() {
-	moduleMessenger::changeThreadCount(1); // Work with 1 thread
+	//!TODO broken :-(
+	//moduleMessenger::changeThreadCount(1); // Work with 1 thread
 
 	// Lock for ever
 	std::mutex mutex;
 	std::unique_lock<std::mutex> lock(mutex);
-	std::condition_variable blockForEver;
 
 	moduleMessenger::postMessage(std::string("Hallo Welt!"));
 	moduleMessenger::postMessage(10);
@@ -91,7 +91,7 @@ int main() {
 
 	moduleMessenger::postMessage(CountClass());
 
-	blockForEver.wait(lock);
+	//!TODO cleanup is broken
 
 	return 0;
 }
