@@ -1,0 +1,28 @@
+{
+   "extDependencies" : [
+		{ "name": "ThreadPool",
+			"url": "git@78.47.95.250:aBuild/ThreadPool",
+			"branch": "master" }
+	],
+   "name" : "ModuleMessenger",
+   "projects" : [
+      {
+         "depLibraries" : [],
+         "dependencies" : ["ThreadPool/threadPool"],
+         "legacy" : {
+            "includes" : []
+         },
+         "path" : "moduleMessenger",
+         "type" : "library"
+      },
+      {
+         "depLibraries" : ["pthread"],
+         "dependencies" : ["ModuleMessenger/moduleMessenger"],
+         "legacy" : {
+            "includes" : []
+         },
+         "path" : "test",
+         "type" : "executable"
+      }
+   ]
+}
